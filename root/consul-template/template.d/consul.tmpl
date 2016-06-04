@@ -58,12 +58,6 @@ frontend www
   {{ if env "HAPROXY_MONITOR_URI" }}
   monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
 
-  {{ if eq (env "HAPROXY_USESSL") "force" }}
-  # Redirect all non-secure connections to HTTPS
-  rspadd Strict-Transport-Security:\ max-age=31536000;\ includeSubdomains;\ preload
-  redirect scheme https if !{ ssl_fc }
-  {{ end }}
-
   {{ if env "HAPROXY_RATELIMIT" }}
   acl HAS_CF_CONNECTING_IP hdr_cnt(CF-Connecting-IP) eq 1
   acl HAS_X_FORWARDED_FOR hdr_cnt(X-Forwarded-For) eq 1
@@ -117,6 +111,12 @@ frontend www
 
   reqadd X-Forwarded-Proto:\ http if !{ ssl_fc }
   reqadd X-Forwarded-Proto:\ https if { ssl_fc }
+
+  {{ if eq (env "HAPROXY_USESSL") "force" }}
+  # Redirect all non-secure connections to HTTPS
+  rspadd Strict-Transport-Security:\ max-age=31536000;\ includeSubdomains;\ preload
+  redirect scheme https if !{ ssl_fc }
+  {{ end }}
 
   # Generated automatically by consul-template
 {{ range services }}{{ if .Tags | contains (env "CONSUL_PRODUCTION") }}
