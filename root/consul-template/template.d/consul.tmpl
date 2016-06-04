@@ -33,6 +33,9 @@ frontend service-in
   rspadd Strict-Transport-Security:\ max-age=31536000;\ includeSubdomains;\ preload
   bind *:8443 ssl crt /haproxy/ssl.crt ca-file /haproxy/ca.pem verify required
 
+  {{ if env "HAPROXY_MONITOR_URI" }}
+  monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
+
   {{ range services }}
     acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "HAPROXY_INTERNAL_DOMAIN") "haproxy.service.consul" }}
     use_backend {{ .Name }}_backend if host_{{ .Name }}
