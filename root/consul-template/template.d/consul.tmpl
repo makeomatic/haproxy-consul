@@ -128,9 +128,9 @@ frontend www
 ### Consul-configured backend services ###
 {{ range services }}
 backend {{ .Name }}_backend
+# tcp mode?
+{{ if .Tags | contains "tcp" }}mode tcp{{ end }}
 {{ range service .Name }}
-  # tcp mode?
-  {{ if .Tags | contains "tcp" }}mode tcp{{ end }}
   server {{ .Node }}-{{ .Port }} {{ .Address }}:{{ .Port }}{{ end }}
 {{ end }}
 
