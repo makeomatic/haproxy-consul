@@ -1,0 +1,132 @@
+global
+  maxconn {{key_or_default "service/haproxy/maxconn" "256"}}
+  ssl-default-bind-options no-sslv3 no-tls-tickets
+  ssl-default-bind-ciphers EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH
+  ssl-default-server-options no-sslv3 no-tls-tickets
+  ssl-default-server-ciphers EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH
+  tune.ssl.default-dh-param {{key_or_default "service/haproxy/global/dh-param" "2048"}}
+
+defaults
+  mode http
+  option forwardfor
+  option redispatch
+  option tcp-smart-accept
+  option tcp-smart-connect
+  option http-server-close
+  retries 3
+  timeout http-request    {{key_or_default "service/haproxy/timeouts/http-request" "5s"}}
+  timeout http-keep-alive {{key_or_default "service/haproxy/timeouts/http-keep-alive" "5s"}}
+  timeout connect         {{key_or_default "service/haproxy/timeouts/connect" "5s"}}
+  timeout client          {{key_or_default "service/haproxy/timeouts/client" "50s"}}
+  timeout client-fin      {{key_or_default "service/haproxy/timeouts/client-fin" "60s"}}
+  timeout tunnel          {{key_or_default "service/haproxy/timeouts/tunnel" "40m"}}
+  timeout server          {{key_or_default "service/haproxy/timeouts/server" "60s"}}
+  timeout tarpit          {{key_or_default "service/haproxy/timeouts/tarpit" "15s"}}
+  timeout queue           {{key_or_default "service/haproxy/timeouts/queue" "10s"}}
+
+{{ if and (env "HAPROXY_INTERNAL") (env "HAPROXY_USESSL") }}
+### Service-frontend ###
+frontend service-in
+  option httplog
+  option forwardfor except 127.0.0.0/8
+  option httpclose
+  rspadd Strict-Transport-Security:\ max-age=31536000;\ includeSubdomains;\ preload
+  bind *:8443 ssl crt /haproxy/ssl.crt ca-file /haproxy/ca.pem verify required
+
+  {{ range services }}
+    acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "HAPROXY_INTERNAL_DOMAIN") "haproxy.service.consul" }}
+    use_backend {{ .Name }}_backend if host_{{ .Name }}
+  {{ end }}
+
+  default_backend servers-down-503
+{{end}}
+
+### HTTP(S) frontend ###
+frontend www
+  # options
+  option httplog
+  option forwardfor except 127.0.0.0/8
+  option httpclose
+
+  # binds
+  bind *:80
+  {{ if env "HAPROXY_USESSL" }}bind *:443 ssl crt /haproxy/ssl.crt{{ end }}
+
+  reqadd X-Forwarded-Proto:\ http if !{ ssl_fc }
+  reqadd X-Forwarded-Proto:\ https if { ssl_fc }
+
+  {{ if eq (env "HAPROXY_USESSL") "force" }}
+  # Redirect all non-secure connections to HTTPS
+  rspadd Strict-Transport-Security:\ max-age=31536000;\ includeSubdomains;\ preload
+  redirect scheme https if !{ ssl_fc }
+  {{ end }}
+
+  {{ if env "HAPROXY_RATELIMIT" }}
+  acl HAS_CF_CONNECTING_IP hdr_cnt(CF-Connecting-IP) eq 1
+  acl HAS_X_FORWARDED_FOR hdr_cnt(X-Forwarded-For) eq 1
+
+  tcp-request content track-sc0 hdr_ip(CF-Connecting-IP,-1) if HTTP HAS_CF_CONNECTING_IP
+  tcp-request content track-sc0 hdr_ip(X-Forwarded-For,-1) if HTTP !HAS_CF_CONNECTING_IP HAS_X_FORWARDED_FOR
+  stick-table type ip size 500k expire 30s store conn_cur,conn_rate(3s),http_req_rate(10s),http_err_rate(10s)
+
+  # TARPIT the new connection if the client already has 10 opened
+  http-request tarpit if { src_conn_cur ge 10 }
+
+  # TARPIT the new connection if the client has opened more than 20 connections in 3 seconds
+  http-request tarpit if { src_conn_rate ge 20 }
+
+  # TARPIT the connection if the client has passed the HTTP error rate (10s)
+  http-request tarpit if { sc0_http_err_rate() gt 20 }
+
+  # TARPIT the connection if the client has passed the HTTP request rate (10s)
+  http-request tarpit if { sc0_http_req_rate() gt 100 }
+
+  # For country blocking and blacklists, if no CF-Connecting-IP is present, use the last value of X-Forwarded-For
+  acl HAS_CF_CONNECTING_IP req.fhdr(CF-Connecting-IP) -m found
+  http-request set-header CF-Connecting-IP %[req.hdr_ip(X-Forwarded-For,-1)] if !HAS_CF_CONNECTING_IP
+
+  # malformed requests
+  acl FORBIDDEN_HDR hdr_cnt(host) gt 1
+  acl FORBIDDEN_HDR hdr_cnt(content-length) gt 1
+  acl FORBIDDEN_HDR hdr_val(content-length) lt 0
+  acl FORBIDDEN_HDR hdr_cnt(proxy-authorization) gt 0
+  acl FORBIDDEN_HDR hdr_cnt(x-xsrf-token) gt 1
+  acl FORBIDDEN_HDR hdr_len(x-xsrf-token) gt 36
+  http-request tarpit if FORBIDDEN_HDR
+
+  http-request set-header X-Forwarded-Proto https if { ssl_fc }
+
+  acl FORBIDDEN_URI url_reg -i .*(\.|%2e)(\.|%2e)(%2f|%5c|/|\\\\)
+  acl FORBIDDEN_URI url_sub -i %00 <script xmlrpc.php
+  acl FORBIDDEN_URI path_beg /_search /_nodes
+  acl FORBIDDEN_URI path_end -i .ida .asp .dll .exe .sh .pl .py .so
+  acl FORBIDDEN_URI path_dir -i chat phpbb sumthin horde _vti_bin MSOffice
+  http-request tarpit if FORBIDDEN_URI
+
+  # TARPIT content-length larger than 200kB
+  acl REQUEST_TOO_BIG hdr_val(content-length) gt {{key_or_default "service/haproxy/rate-limit/content-length" 200000}}
+  http-request deny if METH_POST REQUEST_TOO_BIG
+
+  # TARPIT requests with more than 10 Range headers
+  acl WEIRD_RANGE_HEADERS hdr_cnt(Range) gt {{key_or_default "service/haproxy/rate-limit/range" 10}}
+  http-request tarpit if WEIRD_RANGE_HEADERS{{ end }}
+
+  # Generated automatically by consul-template
+{{ range services }}{{ if .Tags | contains (env "CONSUL_PRODUCTION") }}
+  acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "HAPROXY_DOMAIN") "haproxy.service.consul" }}
+  use_backend {{ .Name }}_backend if host_{{ .Name }}
+{{ end }}{{ end }}
+
+  default_backend servers-down-503
+
+### Consul-configured backend services ###
+{{ range services }}
+backend {{ .Name }}_backend
+{{ range service .Name }}
+  # tcp mode?
+  {{ if .Tags | contains "tcp" }}mode tcp{{ end }}
+  server {{ .Node }}-{{ .Port }} {{ .Address }}:{{ .Port }}{{ end }}
+{{ end }}
+
+backend servers-down-503
+  errorfile 503 /errorfiles/503.http

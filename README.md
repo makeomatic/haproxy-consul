@@ -179,8 +179,11 @@ Configure using the following environment variables:
 Variable | Description | Default
 ---------|-------------|---------
 `HAPROXY_DOMAIN` | The domain to match against | `haproxy.service.consul` (for `app.haproxy.service.consul`).
+`HAPROXY_INTERNAL_DOMAIN` | The domain to match internal services against | `haproxy.service.consul` (for `app.haproxy.service.consul`).
 `HAPROXY_MODE` | forward consul service or Marathon apps | `consul` (`marathon` also available, as described [above](#modes))
 `HAPROXY_USESSL` | Enable the SSL frontend (see [below](#ssl-termination)) | `false`
+`HAPROXY_INTERNAL` | Enables service backend on :8443, can only be used with `HAPTOXY_USESSL` |
+`HAPROXY_RATELIMIT` | Enables rate-limiting checks |
 
 consul-template variables:
 
@@ -190,16 +193,25 @@ Variable | Description | Default
 `CONSUL_CONNECT`  | The consul connection | `consul.service.consul:8500`
 `CONSUL_CONFIG`   | File/directory for consul-template config | `/consul-template/config.d`
 `CONSUL_LOGLEVEL` | Valid values are "debug", "info", "warn", and "err". | `debug`
-`CONSUL_TOKEN`    | The [Consul API token](http://www.consul.io/docs/internals/acl.html) | 
+`CONSUL_TOKEN`    | The [Consul API token](http://www.consul.io/docs/internals/acl.html) |
+`CONSUL_PRODUCTION` | Tag, which filters services to be available without SSL client certificate | "production"
 
 consul KV variables:
 
 Variable | Description | Default
 ---------|-------------|---------
 `service/haproxy/maxconn` | maximum connections | 256
-`service/haproxy/timeouts/connect` | connect timeout | 5000ms
-`service/haproxy/timeouts/client` | client timeout | 50000ms
-`service/haproxy/timeouts/server` | server timeout | 50000ms
+"service/haproxy/timeouts/http-request" | http request timeout | 5s
+"service/haproxy/timeouts/http-keep-alive" | http keep-alive duration | 5s
+"service/haproxy/timeouts/connect" | connect timeout | 5s
+"service/haproxy/timeouts/client" | http client timeout | 50s
+"service/haproxy/timeouts/client-fin" | http client fin timeout | 60s
+"service/haproxy/timeouts/tunnel" | tunnel timeout | 40m
+"service/haproxy/timeouts/server" | server response timeout | 60s
+"service/haproxy/timeouts/tarpit" | tarpit duration | 15s
+"service/haproxy/timeouts/queue" | queue timeout | 10s
+"service/haproxy/rate-limit/content-length" | maximum content length | 200kb
+"service/haproxy/rate-limit/range" | maximum amount of range headers in 1 req | 10
 
 ### SSL Termination
 
