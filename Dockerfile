@@ -16,4 +16,6 @@ VOLUME ["/consul-template"]
 
 COPY root /
 
+EXPOSE 80 443 8443
+
 CMD ["/launch.sh"]
