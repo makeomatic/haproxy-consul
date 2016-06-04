@@ -110,11 +110,11 @@ frontend www
   http-request tarpit if FORBIDDEN_URI
 
   # TARPIT content-length larger than 200kB
-  acl REQUEST_TOO_BIG hdr_val(content-length) gt {{key_or_default "service/haproxy/rate-limit/content-length" 200000}}
+  acl REQUEST_TOO_BIG hdr_val(content-length) gt {{key_or_default "service/haproxy/rate-limit/content-length" "200000"}}
   http-request deny if METH_POST REQUEST_TOO_BIG
 
   # TARPIT requests with more than 10 Range headers
-  acl WEIRD_RANGE_HEADERS hdr_cnt(Range) gt {{key_or_default "service/haproxy/rate-limit/range" 10}}
+  acl WEIRD_RANGE_HEADERS hdr_cnt(Range) gt {{key_or_default "service/haproxy/rate-limit/range" "10"}}
   http-request tarpit if WEIRD_RANGE_HEADERS{{ end }}
 
   # Generated automatically by consul-template
