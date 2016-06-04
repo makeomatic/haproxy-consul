@@ -31,12 +31,11 @@ frontend service-in
   rspadd Strict-Transport-Security:\ max-age=31536000;\ includeSubdomains;\ preload
   bind *:8443 ssl crt /haproxy/ssl.crt ca-file /haproxy/ca.pem verify required
 
-  {{ if (env "HAPROXY_MONITOR_URI") }}
-  monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
+  {{ if (env "HAPROXY_MONITOR_URI") }}monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
 
   {{ range services }}
-    acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "HAPROXY_INTERNAL_DOMAIN") "haproxy.service.consul" }}
-    use_backend {{ .Name }}_backend if host_{{ .Name }}
+  acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "HAPROXY_INTERNAL_DOMAIN") "haproxy.service.consul" }}
+  use_backend {{ .Name }}_backend if host_{{ .Name }}
   {{ end }}
 
   default_backend servers-down-503
@@ -53,8 +52,7 @@ frontend www
   bind *:80
   {{ if env "HAPROXY_USESSL" }}bind *:443 ssl crt /haproxy/ssl.crt{{ end }}
 
-  {{ if (env "HAPROXY_MONITOR_URI") }}
-  monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
+  {{ if (env "HAPROXY_MONITOR_URI") }}monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
 
   {{ if env "HAPROXY_RATELIMIT" }}
   acl HAS_CF_CONNECTING_IP hdr_cnt(CF-Connecting-IP) eq 1
@@ -117,10 +115,10 @@ frontend www
   {{ end }}
 
   # Generated automatically by consul-template
-{{ range services }}{{ if .Tags | contains (env "CONSUL_PRODUCTION") }}
+  {{ range services }}{{ if .Tags | contains (env "CONSUL_PRODUCTION") }}
   acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "HAPROXY_DOMAIN") "haproxy.service.consul" }}
   use_backend {{ .Name }}_backend if host_{{ .Name }}
-{{ end }}{{ end }}
+  {{ end }}{{ end }}
 
   default_backend servers-down-503
 
