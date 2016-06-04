@@ -7,6 +7,7 @@ set -e
 # Required vars
 HAPROXY_MODE=${HAPROXY_MODE:-consul}
 HAPROXY_DOMAIN=${HAPROXY_DOMAIN:-haproxy.service.consul}
+HAPROXY_MONITOR_URI=${HAPROXY_MONITOR_URI:-/monitor}
 CONSUL_TEMPLATE=${CONSUL_TEMPLATE:-/usr/local/bin/consul-template}
 CONSUL_CONFIG=${CONSUL_CONFIG:-/consul-template/config.d}
 CONSUL_CONNECT=${CONSUL_CONNECT:-consul.service.consul:8500}

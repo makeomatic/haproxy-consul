@@ -55,6 +55,9 @@ frontend www
   reqadd X-Forwarded-Proto:\ http if !{ ssl_fc }
   reqadd X-Forwarded-Proto:\ https if { ssl_fc }
 
+  {{ if env "HAPROXY_MONITOR_URI" }}
+  monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
+
   {{ if eq (env "HAPROXY_USESSL") "force" }}
   # Redirect all non-secure connections to HTTPS
   rspadd Strict-Transport-Security:\ max-age=31536000;\ includeSubdomains;\ preload

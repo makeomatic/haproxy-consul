@@ -184,6 +184,7 @@ Variable | Description | Default
 `HAPROXY_USESSL` | Enable the SSL frontend (see [below](#ssl-termination)) | `false`
 `HAPROXY_INTERNAL` | Enables service backend on :8443, can only be used with `HAPTOXY_USESSL` |
 `HAPROXY_RATELIMIT` | Enables rate-limiting checks |
+`HAPROXY_MONITOR_URI` | URI intercepted for health-checks | `/monitor`
 
 consul-template variables:
 
