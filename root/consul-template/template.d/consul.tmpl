@@ -33,7 +33,7 @@ frontend service-in
   rspadd Strict-Transport-Security:\ max-age=31536000;\ includeSubdomains;\ preload
   bind *:8443 ssl crt /haproxy/ssl.crt ca-file /haproxy/ca.pem verify required
 
-  {{ if env "HAPROXY_MONITOR_URI" }}
+  {{ if (env "HAPROXY_MONITOR_URI") }}
   monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
 
   {{ range services }}
@@ -55,7 +55,7 @@ frontend www
   bind *:80
   {{ if env "HAPROXY_USESSL" }}bind *:443 ssl crt /haproxy/ssl.crt{{ end }}
 
-  {{ if env "HAPROXY_MONITOR_URI" }}
+  {{ if (env "HAPROXY_MONITOR_URI") }}
   monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
 
   {{ if env "HAPROXY_RATELIMIT" }}
