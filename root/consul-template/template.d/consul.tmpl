@@ -55,9 +55,6 @@ frontend www
   bind *:80
   {{ if env "HAPROXY_USESSL" }}bind *:443 ssl crt /haproxy/ssl.crt{{ end }}
 
-  reqadd X-Forwarded-Proto:\ http if !{ ssl_fc }
-  reqadd X-Forwarded-Proto:\ https if { ssl_fc }
-
   {{ if env "HAPROXY_MONITOR_URI" }}
   monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
 
@@ -116,6 +113,9 @@ frontend www
   # TARPIT requests with more than 10 Range headers
   acl WEIRD_RANGE_HEADERS hdr_cnt(Range) gt {{key_or_default "service/haproxy/rate-limit/range" "10"}}
   http-request tarpit if WEIRD_RANGE_HEADERS{{ end }}
+
+  reqadd X-Forwarded-Proto:\ http if !{ ssl_fc }
+  reqadd X-Forwarded-Proto:\ https if { ssl_fc }
 
   # Generated automatically by consul-template
 {{ range services }}{{ if .Tags | contains (env "CONSUL_PRODUCTION") }}
