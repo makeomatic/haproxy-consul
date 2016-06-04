@@ -34,7 +34,7 @@ frontend service-in
   {{ if (env "HAPROXY_MONITOR_URI") }}monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
 
   {{ range services }}
-  acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "HAPROXY_INTERNAL_DOMAIN") "haproxy.service.consul" }}
+  acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "HAPROXY_INTERNAL_DOMAIN") "haproxy.service.consul" }}:8443
   use_backend {{ .Name }}_backend if host_{{ .Name }}
   {{ end }}
 
@@ -125,7 +125,6 @@ frontend www
 ### Consul-configured backend services ###
 {{ range services }}
 backend {{ .Name }}_backend
-# tcp mode?
 {{ if .Tags | contains "tcp" }}mode tcp{{ end }}
 {{ range service .Name }}
   server {{ .Node }}-{{ .Port }} {{ .Address }}:{{ .Port }}{{ end }}
