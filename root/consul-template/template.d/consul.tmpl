@@ -68,6 +68,7 @@ frontend www
   acl HAS_CF_CONNECTING_IP hdr_cnt(CF-Connecting-IP) eq 1
   acl HAS_X_FORWARDED_FOR hdr_cnt(X-Forwarded-For) eq 1
 
+  tcp-request inspect-delay 1s
   tcp-request content track-sc0 hdr_ip(CF-Connecting-IP,-1) if HTTP HAS_CF_CONNECTING_IP
   tcp-request content track-sc0 hdr_ip(X-Forwarded-For,-1) if HTTP !HAS_CF_CONNECTING_IP HAS_X_FORWARDED_FOR
   stick-table type ip size 500k expire 30s store conn_cur,conn_rate(3s),http_req_rate(10s),http_err_rate(10s)
