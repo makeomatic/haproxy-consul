@@ -92,8 +92,6 @@ frontend www
   acl FORBIDDEN_HDR hdr_len(x-xsrf-token) gt 36
   http-request tarpit if FORBIDDEN_HDR
 
-  http-request set-header X-Forwarded-Proto https if { ssl_fc }
-
   acl FORBIDDEN_URI url_reg -i .*(\.|%2e)(\.|%2e)(%2f|%5c|/|\\\\)
   acl FORBIDDEN_URI url_sub -i %00 <script xmlrpc.php
   acl FORBIDDEN_URI path_beg /_search /_nodes

@@ -48,7 +48,7 @@ RUN set -x \
   && mv /consul-template /usr/local/bin/consul-template \
   && rm -rf /consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip \
   && mkdir /haproxy \
-	&& apk add --virtual .haproxy-rundeps $runDeps bash \
+	&& apk add --virtual .haproxy-rundeps $runDeps bash ca-certificates \
 	&& apk del .build-deps
 
 VOLUME ["/consul-template", "/haproxy"]
