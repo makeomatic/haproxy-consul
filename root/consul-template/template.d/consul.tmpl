@@ -33,6 +33,10 @@ frontend service-in
 
   {{ if (env "HAPROXY_MONITOR_URI") }}monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
 
+  acl HAS_CF_CONNECTING_IP hdr_cnt(CF-Connecting-IP) eq 1
+  http-request set-header X-Forwarded-Proto https
+  http-request set-header CF-Connecting-IP %[req.hdr_ip(X-Forwarded-For,-1)] if !HAS_CF_CONNECTING_IP
+
   {{ range services }}
   acl host_{{ .Name }} hdr(host) -i {{ .Name }}.{{ or (env "HAPROXY_INTERNAL_DOMAIN") "haproxy.service.consul" }}:8443
   use_backend {{ .Name }}_backend if host_{{ .Name }}
