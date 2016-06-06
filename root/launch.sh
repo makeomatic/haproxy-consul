@@ -59,7 +59,6 @@ term_handler() {
   fi
   exit 0; # we drop 0, because SIGINT is just a reload
 }
-trap term_handler SIGTERM SIGINT
 
 function launch_haproxy {
     if [ "$(ls -A /usr/local/share/ca-certificates)" ]; then
@@ -94,10 +93,12 @@ function launch_haproxy {
     ${CONSUL_TEMPLATE} -config ${CONSUL_CONFIG} \
                        -log-level ${CONSUL_LOGLEVEL} \
                        -wait ${CONSUL_MINWAIT}:${CONSUL_MAXWAIT} \
-                       -consul ${CONSUL_CONNECT} ${ctargs} ${vars}
+                       -consul ${CONSUL_CONNECT} ${ctargs} ${vars} || exit 128;
 }
 
 launch_haproxy $@ & pid="$!"
+
+trap term_handler SIGTERM SIGINT
 
 # wait indefinetely
 while true
