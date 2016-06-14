@@ -1,6 +1,8 @@
 #!/bin/bash
 
 set -e
+set -u
+
 #set the DEBUG env variable to turn on debugging
 [[ -n "$DEBUG" ]] && set -x
 
@@ -60,7 +62,7 @@ term_handler() {
   exit 0; # we drop 0, because SIGINT is just a reload
 }
 
-function launch_haproxy {
+launch_haproxy() {
     if [ "$(ls -A /usr/local/share/ca-certificates)" ]; then
         cat /usr/local/share/ca-certificates/* >> /etc/ssl/certs/ca-certificates.crt
     fi
@@ -98,10 +100,16 @@ function launch_haproxy {
 
 launch_haproxy $@ & pid="$!"
 
+# sigterm / sigint handler
 trap term_handler SIGTERM SIGINT
 
-# wait indefinetely
-while true
-do
-  tail -f /dev/null & wait ${!}
+# in
+while inotifywait -q -r --exclude '\.git/' -e modify -e create -e delete /etc/letsencrypt; do
+  if [ $pid -ne 0 ] && [ kill -0 $pid ]; then
+    log "Reload consul-template due to certificate changes..."
+    kill -s SIGHUP $pid;
+  else
+    log "$pid is '0', consul-template died, quitting"
+    break
+  fi
 done

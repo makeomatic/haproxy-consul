@@ -4,6 +4,10 @@ global
   ssl-default-bind-ciphers EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH
   tune.ssl.default-dh-param {{key_or_default "service/haproxy/global/dh-param" "2048"}}
 
+  # Default SSL material locations
+  crt-base {{key_or_default "service/haproxy/global/letsencrypt/crt-base" "/etc/letsencrypt/live"}}
+  lua-load /usr/local/etc/haproxy/acme-http01-webroot.lua
+
 defaults
   mode http
   option forwardfor
@@ -54,7 +58,7 @@ frontend www
 
   # binds
   bind *:80
-  {{ if env "HAPROXY_USESSL" }}bind *:443 ssl crt /haproxy/ssl.crt{{ end }}
+  {{ if env "HAPROXY_USESSL" }}bind *:443 ssl crt {{env "HAPROXY_DOMAIN"}}/haproxy.pem{{ end }}
 
   {{ if (env "HAPROXY_MONITOR_URI") }}monitor-uri {{env "HAPROXY_MONITOR_URI"}}{{ end }}
 
@@ -110,10 +114,13 @@ frontend www
   reqadd X-Forwarded-Proto:\ http if !{ ssl_fc }
   reqadd X-Forwarded-Proto:\ https if { ssl_fc }
 
+  acl url_acme_http01 path_beg /.well-known/acme-challenge/
+  http-request use-service lua.acme-http01 if METH_GET url_acme_http01
+
   {{ if eq (env "HAPROXY_USESSL") "force" }}
   # Redirect all non-secure connections to HTTPS
   rspadd Strict-Transport-Security:\ max-age=31536000;\ includeSubdomains;\ preload
-  redirect scheme https if !{ ssl_fc }
+  redirect scheme https if !{ ssl_fc } !url_acme_http01
   {{ end }}
 
   # Generated automatically by consul-template
