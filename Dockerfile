@@ -28,14 +28,14 @@ RUN set -x \
     lua5.3-dev \
     inotify-tools \
   && git clone https://github.com/brunoos/luasec.git /lua-sec \
+  && cd /lua-sec \
   && make linux \
   && make install \
-	&& curl -SL "http://www.haproxy.org/download/${HAPROXY_MAJOR}/src/haproxy-${HAPROXY_VERSION}.tar.gz" -o haproxy.tar.gz \
+	&& curl -SL "http://www.haproxy.org/download/${HAPROXY_MAJOR}/src/haproxy-${HAPROXY_VERSION}.tar.gz" -o /haproxy.tar.gz \
 	&& echo "${HAPROXY_MD5}  haproxy.tar.gz" | md5sum -c \
 	&& mkdir -p /usr/src \
-	&& tar -xzf haproxy.tar.gz -C /usr/src \
+	&& tar -xzf /haproxy.tar.gz -C /usr/src \
 	&& mv "/usr/src/haproxy-$HAPROXY_VERSION" /usr/src/haproxy \
-	&& rm haproxy.tar.gz \
 	&& make -C /usr/src/haproxy \
 		TARGET=linux2628 \
 		USE_PCRE=1 PCREDIR= \
