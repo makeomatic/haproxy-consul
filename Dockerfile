@@ -43,6 +43,9 @@ RUN set -x \
 		USE_PCRE=1 PCREDIR= \
 		USE_OPENSSL=1 \
 		USE_ZLIB=1 \
+    USE_LUA=yes \
+    LUA_LIB=${LUAPATH} \
+    LUA_INC=/usr/include/lua5.3 LDFLAGS=-ldl \
 		all \
 		install-bin \
 	&& mkdir -p /usr/local/etc/haproxy \
