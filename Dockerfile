@@ -27,7 +27,6 @@ RUN set -x \
     zip \
     lua5.3-dev \
     inotify-tools \
-    tar \
   && git clone https://github.com/brunoos/luasec.git /lua-sec \
   && cd /lua-sec \
   && make linux \
@@ -51,8 +50,6 @@ RUN set -x \
 	&& mkdir -p /usr/local/etc/haproxy \
 	&& cp -R /usr/src/haproxy/examples/errorfiles /usr/local/etc/haproxy/errors \
 	&& rm -rf /usr/src/haproxy \
-  && curl -SL https://github.com/janeczku/haproxy-acme-validation-plugin/archive/${ACME_PLUGIN_VERSION}.tar.gz -o /acme-plugin.tar.gz \
-	&& tar xzf /acme-plugin.tar.gz --strip-components=1 --no-anchored acme-http01-webroot.lua -C /usr/local/etc/haproxy/ \
 	&& runDeps="$( \
 		scanelf --needed --nobanner --recursive /usr/local \
 			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
