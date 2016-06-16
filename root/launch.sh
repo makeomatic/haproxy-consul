@@ -4,7 +4,7 @@ set -e
 set -u
 
 #set the DEBUG env variable to turn on debugging
-[[ -n "${DEBUG}" ]] && set -x
+[[ ! -z "$DEBUG" ]] && set -x
 
 pid=0
 
