@@ -91,14 +91,6 @@ launch_haproxy() {
     # be started)
     [ -f /haproxy/haproxy.cfg ] && rm /haproxy/haproxy.cfg
 
-    # pre-run to watch what we get
-    ${CONSUL_TEMPLATE} -config ${CONSUL_CONFIG} \
-                       -log-level ${CONSUL_LOGLEVEL} \
-                       -wait ${CONSUL_MINWAIT}:${CONSUL_MAXWAIT} \
-                       -consul ${CONSUL_CONNECT} ${ctargs} ${vars} \
-                       -dry \
-                       -once
-
     ${CONSUL_TEMPLATE} -config ${CONSUL_CONFIG} \
                        -log-level ${CONSUL_LOGLEVEL} \
                        -wait ${CONSUL_MINWAIT}:${CONSUL_MAXWAIT} \
