@@ -109,6 +109,7 @@ launch_haproxy $@ & pid="$!"
 
 # sigterm / sigint handler
 trap term_handler SIGTERM SIGINT
+trap "kill -SIGHUP "$pid"" SIGHUP
 
 # wait indefinetely
 while true
