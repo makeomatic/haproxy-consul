@@ -1,10 +1,9 @@
 #!/bin/bash
 
 set -e
-set -u
 
 #set the DEBUG env variable to turn on debugging
-[[ ! -z "$DEBUG" ]] && set -x
+[[ -n "$DEBUG" ]] && set -x
 
 pid=0
 
@@ -19,7 +18,7 @@ CONSUL_MAXWAIT=${CONSUL_MAXWAIT:-10s}
 CONSUL_LOGLEVEL=${CONSUL_LOGLEVEL:-info}
 CONSUL_PRODUCTION=${CONSUL_PRODUCTION:-production}
 
-usage() {
+function usage {
 cat <<USAGE
   launch.sh             Start a consul-backed haproxy instance
 
