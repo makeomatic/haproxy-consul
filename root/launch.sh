@@ -104,7 +104,7 @@ trap term_handler SIGTERM SIGINT
 
 # in
 while inotifywait -q -r --exclude '\.git/' -e modify -e create -e delete /etc/letsencrypt; do
-  if [ $pid -ne 0 ] && [ kill -0 $pid ]; then
+  if [[ $pid -ne 0 ]] && [[ kill -0 $pid ]]; then
     log "Reload consul-template due to certificate changes..."
     kill -s SIGHUP $pid;
   else
