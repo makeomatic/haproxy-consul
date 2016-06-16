@@ -102,13 +102,8 @@ launch_haproxy $@ & pid="$!"
 # sigterm / sigint handler
 trap term_handler SIGTERM SIGINT
 
-# in
-while inotifywait -q -r --exclude '\.git/' -e modify -e create -e delete /etc/letsencrypt; do
-  if [[ $pid -ne 0 ]] && kill -0 $pid; then
-    echo "Reload consul-template due to certificate changes..."
-    kill -s SIGHUP $pid;
-  else
-    echo "$pid is '0', consul-template died, quitting"
-    break
-  fi
+# wait indefinetely
+while true
+do
+  tail -f /dev/null & wait ${!}
 done

@@ -26,7 +26,6 @@ RUN set -x \
     wget \
     zip \
     lua5.3-dev \
-    inotify-tools \
   && git clone https://github.com/brunoos/luasec.git /lua-sec \
   && cd /lua-sec \
   && make linux \
