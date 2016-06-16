@@ -96,7 +96,8 @@ launch_haproxy() {
                        -log-level ${CONSUL_LOGLEVEL} \
                        -wait ${CONSUL_MINWAIT}:${CONSUL_MAXWAIT} \
                        -consul ${CONSUL_CONNECT} ${ctargs} ${vars} \
-                       -dry
+                       -dry \
+                       -once
 
     ${CONSUL_TEMPLATE} -config ${CONSUL_CONFIG} \
                        -log-level ${CONSUL_LOGLEVEL} \
