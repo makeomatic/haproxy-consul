@@ -22,10 +22,18 @@ CONSUL_PRODUCTION=${CONSUL_PRODUCTION:-production}
 # https://medium.com/@gchudnov/trapping-signals-in-docker-containers-7a57fdda7d86#.2rkt303t7
 term_handler() {
   if [ $pid -ne 0 ]; then
-    kill -SIGTERM "$pid"
+    kill -s TERM "$pid"
     wait "$pid"
   fi
   exit 0; # we drop 0, because SIGINT is just a reload
+}
+
+reload_handler() {
+  if [ $pid -ne 0 ]; then
+    echo "sending HUP to $pid"
+    kill -s HUP "$pid"
+    wait "$pid"
+  fi
 }
 
 launch_haproxy() {
@@ -58,20 +66,22 @@ launch_haproxy() {
     # be started)
     [ -f /haproxy/haproxy.cfg ] && rm /haproxy/haproxy.cfg
 
-    ${CONSUL_TEMPLATE} -config ${CONSUL_CONFIG} \
-                       -log-level ${CONSUL_LOGLEVEL} \
-                       -wait ${CONSUL_MINWAIT}:${CONSUL_MAXWAIT} \
-                       -consul ${CONSUL_CONNECT} ${ctargs} ${vars} || exit 128;
+    ${CONSUL_TEMPLATE} \
+      -config ${CONSUL_CONFIG} \
+      -log-level ${CONSUL_LOGLEVEL} \
+      -wait ${CONSUL_MINWAIT}:${CONSUL_MAXWAIT} \
+      -consul ${CONSUL_CONNECT} ${ctargs} ${vars} \
+      & pid="$!" || exit 128;
 }
 
-launch_haproxy $@ & pid="$!"
+launch_haproxy $@
 
 # log some useful data
 echo "consul running with pid $pid"
 
 # sigterm / sigint handler
 trap term_handler SIGTERM SIGINT
-trap "echo 'reloading $pid'; kill -SIGHUP $pid" SIGHUP
+trap reload_handler SIGHUP
 
 # wait indefinetely
 while true
