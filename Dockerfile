@@ -76,4 +76,4 @@ COPY root /
 
 VOLUME ["/consul-template", "/haproxy", "/etc/letsencrypt", "/var/acme-webroot"]
 EXPOSE 80 443 8443
-CMD ["/launch.sh"]
+ENTRYPOINT ["/launch.sh"]
