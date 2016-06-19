@@ -71,7 +71,7 @@ echo "consul running with pid $pid"
 
 # sigterm / sigint handler
 trap term_handler SIGTERM SIGINT
-trap "kill -SIGHUP $pid" SIGHUP
+trap "echo 'reloading $pid'; kill -SIGHUP $pid" SIGHUP
 
 # wait indefinetely
 while true
