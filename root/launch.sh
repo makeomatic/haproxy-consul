@@ -15,7 +15,8 @@ CONSUL_CONFIG=${CONSUL_CONFIG:-/consul-template/config.d}
 CONSUL_CONNECT=${CONSUL_CONNECT:-consul.service.consul:8500}
 CONSUL_MINWAIT=${CONSUL_MINWAIT:-2s}
 CONSUL_MAXWAIT=${CONSUL_MAXWAIT:-10s}
-CONSUL_LOGLEVEL=${CONSUL_LOGLEVEL:-info}
+CONSUL_RETRY=${CONSUL_RETRY:-5s}
+CONSUL_LOGLEVEL=${CONSUL_LOGLEVEL:-warn}
 CONSUL_PRODUCTION=${CONSUL_PRODUCTION:-production}
 
 # SIGTERM & SIGINT -handler
@@ -68,6 +69,7 @@ launch_haproxy() {
 
     ${CONSUL_TEMPLATE} \
       -config ${CONSUL_CONFIG} \
+      -retry ${CONSUL_RETRY} \
       -log-level ${CONSUL_LOGLEVEL} \
       -wait ${CONSUL_MINWAIT}:${CONSUL_MAXWAIT} \
       -consul ${CONSUL_CONNECT} ${ctargs} ${vars} \

@@ -1,15 +1,14 @@
-FROM gliderlabs/alpine:3.4
+FROM alpine:3.4
 
 MAINTAINER Vitaly Aminev <v@makeomatic.ru>
 
-ENV CONSUL_TEMPLATE_VERSION=0.14.0 \
-    HAPROXY_MAJOR=1.6 \
-    HAPROXY_VERSION=1.6.5 \
-    HAPROXY_MD5=5290f278c04e682e42ab71fed26fc082 \
+ENV CONSUL_TEMPLATE_VERSION=0.16.0 \
+    HAPROXY_MAJOR=1.7 \
+    HAPROXY_VERSION=1.7.1 \
+    HAPROXY_MD5=d0acaae02e444039e11892ea31dde478 \
     LUAPATH=/usr/lib/lua5.3 \
     LUACPATH=/usr/lib/lua5.3 \
-    INC_PATH="-I/usr/include/lua5.3" \
-    ACME_PLUGIN_VERSION=0.1.1
+    INC_PATH="-I/usr/include/lua5.3"
 
 # see http://sources.debian.net/src/haproxy/1.6.5-2/debian/rules/ for some helpful navigation of the possible "make" arguments
 RUN set -x \
